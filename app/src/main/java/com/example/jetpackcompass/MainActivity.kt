@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.jetpackcompass.data.sensor.CompassSensorManager
+import com.example.jetpackcompass.data.sensor.FakeCompassSensorManager
 import com.example.jetpackcompass.domain.usecase.GetCompassReadingUseCase
 import com.example.jetpackcompass.ui.compass.CompassUiState
 import com.example.jetpackcompass.ui.compass.CompassScreen
@@ -64,6 +65,12 @@ class MainActivity : ComponentActivity() {
 
 
     private fun createViewModel() {
+        // todo: use other sensor manager
+//        compassViewModel = CompassViewModel(
+//            sensorDataSource = FakeCompassSensorManager(),
+//            getCompassReadingUseCase = GetCompassReadingUseCase()
+//        )
+
         compassViewModel = CompassViewModel(
             sensorDataSource = CompassSensorManager(this),
             getCompassReadingUseCase = GetCompassReadingUseCase()
@@ -75,19 +82,14 @@ class MainActivity : ComponentActivity() {
             ContextCompat.checkSelfPermission(
                 this,
                 locationPermission
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                updatePermissionState(true)
-            }
+            ) == PackageManager.PERMISSION_GRANTED -> updatePermissionState(true)
 
-            else -> {
-                permissionLauncher.launch(locationPermission)
-            }
+            else -> permissionLauncher.launch(locationPermission)
         }
     }
 
     private fun updatePermissionState(hasPermission: Boolean) {
-        val locationManager =
-            getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         val isGpsEnabled =
             hasPermission && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -105,7 +107,6 @@ class MainActivity : ComponentActivity() {
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
-
     }
 
     private fun startCompass() {
@@ -155,22 +156,19 @@ fun JetpackComposeLayout(
     CoreLayout(
         modifier = Modifier.background(Color.Black),
         content = {
-            when {
-                uiState.hasLocationPermission && uiState.isGpsEnabled -> {
-                    CompassScreen(
-                        uiState = uiState
-                    )
-                }
+            CompassScreen(
+                enable = uiState.hasLocationPermission && uiState.isGpsEnabled,
+                uiState = uiState,
+            )
 
-                uiState.hasLocationPermission && !uiState.isGpsEnabled -> {
-                    GpsDisabledContent(
-                        onOpenLocationSettings = onOpenLocationSettings)
-                }
+            GpsDisabledContent(
+                enable = uiState.hasLocationPermission && !uiState.isGpsEnabled,
+                onOpenLocationSettings = onOpenLocationSettings,
+            )
 
-                else -> {
-                    PermissionRequiredContent()
-                }
-            }
+            PermissionRequiredContent(
+                enable = !uiState.hasLocationPermission || !uiState.isGpsEnabled,
+            )
         }
     )
 }

@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -28,8 +26,12 @@ import kotlin.math.sin
 
 @Composable
 fun CompassScreen(
+    enable: Boolean = true,
     uiState: CompassUiState,
 ) {
+    if(!enable) return
+
+
     Compass(
         angle = uiState.azimuth,
         directionText = uiState.directionText
@@ -68,21 +70,37 @@ fun Compass(
     }
 }
 
+/**
+ * @param primaryAngle The current heading of the device (usually from sensors), in degrees (0–360)
+ * 0° = North
+ * 90° = East
+ * 180° = South
+ * 270° = West
+ *
+ */
 @Composable
 fun CompassCanvas(primaryAngle: Float) {
     Canvas(modifier = Modifier.fillMaxSize()) {
+
+        // centerX, centerY: center of the canvas
+        // radius is radius of the compass circle. minDimension ensures it fits in both width & height
         val centerX = size.width / 2
         val centerY = size.height / 2
         val radius = size.minDimension / 2
 
+        // Draws the outer ring of the compass
         drawCircle(
-            color = Color.Blue,
+            color = Color.DarkGray,
             radius = radius,
             center = Offset(centerX, centerY),
             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
         )
 
+        // Drawing tick marks (degree lines)
         for (i in 0..359 step 5) {
+
+            // Every 30° Longer, Thicker
+            // Other ticks Shorter, Thinner
             val angleInRad = Math.toRadians(i.toDouble())
             val lineLength = if (i % 30 == 0) 18.dp.toPx() else 8.dp.toPx()
             val strokeWidth = if (i % 30 == 0) 3.dp.toPx() else 2.dp.toPx()
@@ -95,18 +113,22 @@ fun CompassCanvas(primaryAngle: Float) {
             val endX = centerX + endRadius * cos(angleInRad)
             val endY = centerY + endRadius * sin(angleInRad)
 
+            // Draws each tick line
+            // If the tick angle is close to primaryAngle -> Yellow
+            // Otherwise -> DarkGray
+            val isAngleBetween = CompassUtil.isAngleBetween(
+                angle1 = i.toFloat(),
+                angle2 = primaryAngle,
+                angleTolerance = 2.5f
+            )
             drawLine(
-                color = if (CompassUtil.isAngleBetween(
-                        i.toFloat(),
-                        primaryAngle,
-                        angleTolerance = 2.5f
-                    )
-                ) Color.Yellow else Color.DarkGray,
+                color = if (isAngleBetween) Color.Yellow else Color.DarkGray,
                 start = Offset(startX.toFloat(), startY.toFloat()),
                 end = Offset(endX.toFloat(), endY.toFloat()),
                 strokeWidth = strokeWidth
             )
 
+            // Drawing degree labels (0°, 30°, 60°...)
             if (i % 30 == 0) {
                 val textRadius = radius - 34.dp.toPx()
                 val textX = centerX + textRadius * cos(angleInRad) - 10.dp.toPx()
@@ -137,7 +159,7 @@ fun CompassCanvas(primaryAngle: Float) {
 fun CompassScreenPreview() {
     CompassScreen(
         uiState = CompassUiState(
-            azimuth = 120f,
+            azimuth = 0f,
             directionText = "Southeast"
         )
     )

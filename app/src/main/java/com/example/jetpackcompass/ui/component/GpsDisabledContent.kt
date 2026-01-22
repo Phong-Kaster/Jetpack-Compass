@@ -15,10 +15,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.ButtonDefaults
+
 @Composable
 fun GpsDisabledContent(
+    enable: Boolean = true,
     onOpenLocationSettings: () -> Unit
 ) {
+    if (!enable) return
     Column(
         modifier = Modifier
             .fillMaxSize()

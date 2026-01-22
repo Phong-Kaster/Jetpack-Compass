@@ -18,11 +18,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun PermissionRequiredContent() {
+fun PermissionRequiredContent(
+    enable: Boolean = true,
+) {
+    if (!enable) return
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(color = Color.Black)
     ) {
 
