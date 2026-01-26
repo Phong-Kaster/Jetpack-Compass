@@ -34,10 +34,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.jetpackcompass.data.location.LocationDataSource
+import com.example.jetpackcompass.data.location.LocationSensorManager
 import com.example.jetpackcompass.data.sensor.CompassSensorManager
 import com.example.jetpackcompass.data.sensor.FakeCompassSensorManager
 import com.example.jetpackcompass.domain.usecase.CalculateQiblaBearingUseCase
-import com.example.jetpackcompass.domain.usecase.GetCompassReadingUseCase
 import com.example.jetpackcompass.ui.compass.CompassUiState
 import com.example.jetpackcompass.ui.compass.CompassScreen
 import com.example.jetpackcompass.ui.compass.CompassViewModel
@@ -78,15 +79,9 @@ class MainActivity : ComponentActivity() {
 
 
     private fun createViewModel() {
-        // todo: use other sensor manager
-//        compassViewModel = CompassViewModel(
-//            sensorDataSource = FakeCompassSensorManager(),
-//            getCompassReadingUseCase = GetCompassReadingUseCase()
-//        )
-
         compassViewModel = CompassViewModel(
             sensorDataSource = CompassSensorManager(this),
-            getCompassReadingUseCase = GetCompassReadingUseCase(),
+            locationDataSource = LocationSensorManager(this),
             calculateQiblaBearingUseCase = CalculateQiblaBearingUseCase()
         )
     }

@@ -12,7 +12,6 @@ enum class CompassDesign(
     @DrawableRes val needle: Int,
     @DrawableRes val qiblaIcon: Int,
     @DrawableRes val lightId: Int = 0,
-    @DrawableRes val backgroundId: Int = 0,
     val isPremium: Boolean = false,
 ) {
     Default(
@@ -22,6 +21,17 @@ enum class CompassDesign(
         dialIcon = R.drawable.dial8,
         needle = R.drawable.needle8,
         qiblaIcon = R.drawable.qibla5
+    ),
+    Royalty(
+        titleId = R.string.royalty,
+        previewId = R.drawable.compass_royalty,
+        northIcon = R.drawable.north_royalty,
+        dialIcon = R.drawable.dial_royalty,
+        needle = R.drawable.needle_royalty,
+        qiblaIcon = R.drawable.qibla_royalty,
+        lightId = R.drawable.light_royalty,
+
+        isPremium = true,
     ),
     Modern(
         titleId = R.string.modern,

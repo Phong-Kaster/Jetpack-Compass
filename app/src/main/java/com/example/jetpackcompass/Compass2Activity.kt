@@ -47,14 +47,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.jetpackcompass.data.location.LocationDataSource
+import com.example.jetpackcompass.data.location.LocationSensorManager
 import com.example.jetpackcompass.data.sensor.CompassSensorManager
 import com.example.jetpackcompass.domain.enums.CompassDesign
 import com.example.jetpackcompass.domain.usecase.CalculateQiblaBearingUseCase
-import com.example.jetpackcompass.domain.usecase.GetCompassReadingUseCase
 import com.example.jetpackcompass.ui.compass.CompassUiState
 import com.example.jetpackcompass.ui.compass.CompassViewModel
 import com.example.jetpackcompass.ui.component.CoreLayout
+import com.example.jetpackcompass.ui.component.CustomizedCompass
 import com.example.jetpackcompass.ui.theme.JetpackCompassTheme
+import com.example.jetpackcompass.util.CompassUtil.currentDirectionPointToMecca
 import kotlinx.coroutines.launch
 
 class Compass2Activity : ComponentActivity() {
@@ -65,7 +68,9 @@ class Compass2Activity : ComponentActivity() {
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             updatePermissionState(isGranted)
-            if (!isGranted) {
+            if (isGranted) {
+                startCompass()
+            } else {
                 Toast.makeText(
                     this,
                     "Location permission is required to use the compass",
@@ -79,7 +84,6 @@ class Compass2Activity : ComponentActivity() {
         super.onResume()
         checkPermissionAndGps()
         startCompass()
-        collectUiState()
     }
 
 
@@ -124,15 +128,19 @@ class Compass2Activity : ComponentActivity() {
     }
 
     private fun checkPermissionAndGps() {
-        when {
+        val hasPermission =
             ContextCompat.checkSelfPermission(
                 this,
                 locationPermission
-            ) == PackageManager.PERMISSION_GRANTED -> updatePermissionState(true)
+            ) == PackageManager.PERMISSION_GRANTED
 
-            else -> permissionLauncher.launch(locationPermission)
+        if (hasPermission) {
+            updatePermissionState(true)
+        } else {
+            permissionLauncher.launch(locationPermission)
         }
     }
+
 
     private fun createViewModel() {
         // todo: use other sensor manager
@@ -143,7 +151,7 @@ class Compass2Activity : ComponentActivity() {
 
         compassViewModel = CompassViewModel(
             sensorDataSource = CompassSensorManager(this),
-            getCompassReadingUseCase = GetCompassReadingUseCase(),
+            locationDataSource = LocationSensorManager(this),
             calculateQiblaBearingUseCase = CalculateQiblaBearingUseCase()
         )
     }
@@ -152,6 +160,9 @@ class Compass2Activity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         createViewModel()
+
+        collectUiState()
+
         enableEdgeToEdge()
         setContent {
             JetpackCompassTheme {
@@ -169,12 +180,14 @@ private fun Compass2Layout(
     uiState: CompassUiState,
     onBack: () -> Unit = {},
 ) {
+    // Device direction
     val animatedAzimuth by animateFloatAsState(
         targetValue = -uiState.azimuth,
         animationSpec = tween(durationMillis = 300),
         label = "dialRotation"
     )
 
+    // Qibla direction
     val animatedQibla by animateFloatAsState(
         targetValue = uiState.qiblaBearing - uiState.azimuth,
         animationSpec = tween(durationMillis = 300),
@@ -207,13 +220,19 @@ private fun Compass2Layout(
 
                 Text(
                     text = "${uiState.azimuth.toInt()}°",
-                    color = Color.White,
+                    color = if (currentDirectionPointToMecca(qiblaDirection = animatedQibla))
+                        Color.Green
+                    else
+                        Color.White,
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = uiState.directionText,
-                    color = Color.White,
+                    color = if (currentDirectionPointToMecca(qiblaDirection = animatedQibla))
+                        Color.Green
+                    else
+                        Color.White,
                     fontSize = 24.sp
                 )
             }
@@ -224,56 +243,12 @@ private fun Compass2Layout(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
+                CustomizedCompass(
+                    azimuth = uiState.azimuth,
+                    qiblaBearing = uiState.qiblaBearing,
+                    compassDesign = CompassDesign.Royalty,
                     modifier = Modifier
-                        .size(350.dp)
-                ) {
-                    // 🧭 Dial (rotates)
-                    Image(
-                        painter = painterResource(CompassDesign.Default.dialIcon),
-                        contentScale = ContentScale.Fit,
-                        contentDescription = "Dial",
-                        modifier = Modifier
-                            .matchParentSize()
-                            .graphicsLayer {
-                                rotationZ = animatedAzimuth
-                            },
-                    )
-
-                    // 🧭 North icon (rotates with dial)
-                    Image(
-                        painter = painterResource(CompassDesign.Default.northIcon),
-                        contentScale = ContentScale.Fit,
-                        contentDescription = "northIcon",
-                        modifier = Modifier
-                            .matchParentSize()
-                            .graphicsLayer {
-                                rotationZ = animatedAzimuth
-                            },
-                    )
-
-                    // Needle (fixed)
-                    Image(
-                        painter = painterResource(CompassDesign.Default.needle),
-                        contentScale = ContentScale.Fit,
-                        contentDescription = "Dial",
-                        modifier = Modifier
-                            .matchParentSize(),
-                    )
-
-                    // 🕋 Qibla icon (relative rotation)
-                    Image(
-                        painter = painterResource(CompassDesign.Default.qiblaIcon),
-                        contentDescription = "Qibla",
-                        modifier = Modifier
-                            .matchParentSize()
-                            .graphicsLayer {
-                                rotationZ = animatedQibla
-                            }
-                    )
-                }
-
+                )
             }
         }
     )

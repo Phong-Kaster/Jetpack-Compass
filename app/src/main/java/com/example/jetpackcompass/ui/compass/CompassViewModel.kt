@@ -1,18 +1,24 @@
 package com.example.jetpackcompass.ui.compass
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.jetpackcompass.data.location.LocationDataSource
+import com.example.jetpackcompass.data.location.model.LocationInfo
 import com.example.jetpackcompass.data.sensor.CompassSensorDataSource
 import com.example.jetpackcompass.domain.common.Constant
 import com.example.jetpackcompass.domain.usecase.CalculateQiblaBearingUseCase
-import com.example.jetpackcompass.domain.usecase.GetCompassReadingUseCase
+import com.example.jetpackcompass.util.CompassUtil.applyLowPassFilter
+import com.example.jetpackcompass.util.CompassUtil.convertFromMagneticNorthToTrueNorth
+import com.example.jetpackcompass.util.CompassUtil.resolveDirection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class CompassViewModel(
     private val sensorDataSource: CompassSensorDataSource,
-    private val getCompassReadingUseCase: GetCompassReadingUseCase,
+    private val locationDataSource: LocationDataSource,
     private val calculateQiblaBearingUseCase: CalculateQiblaBearingUseCase,
 ) : ViewModel() {
 
@@ -21,53 +27,71 @@ class CompassViewModel(
     val uiState = _uiState.asStateFlow()
 
 
-
+    /**
+     * Start both sensors properly
+     */
+    private var latestLocation: LocationInfo? = null
 
     fun start() {
-        sensorDataSource.start { newAzimuth ->
-            val filtered = getCompassReadingUseCase.applyLowPassFilter(
+        locationDataSource.start()
+
+        viewModelScope.launch {
+            locationDataSource.location.collectLatest { location ->
+                latestLocation = location
+
+                Log.d(
+                    TAG,
+                    "📍 Location update → " +
+                            "lat=${location?.latitude}, " +
+                            "lng=${location?.longitude}, " +
+                            "alt=${location?.altitude}"
+                )
+            }
+        }
+
+        sensorDataSource.start { magneticAzimuth ->
+
+            val trueAzimuth = convertFromMagneticNorthToTrueNorth(
+                magneticAzimuth,
+                latestLocation
+            )
+
+            val filtered = applyLowPassFilter(
                 previous = _uiState.value.azimuth,
-                current = newAzimuth,
+                current = trueAzimuth,
                 alpha = Constant.LOW_PASS_ALPHA
             )
+            Log.d(TAG, "Filtered azimuth = $filtered°")
 
-            val qiblaBearing = calculateQiblaBearingUseCase.execute(
-                userLat = 0.0,
-                userLng = 0.0,
-            )
+            val location = latestLocation
+            val qiblaBearing = if (location != null) {
+                calculateQiblaBearingUseCase.execute(
+                    userLat = location.latitude,
+                    userLng = location.longitude
+                )
+            } else 0f
 
 
-
-            Log.d(TAG, "azimuth is $filtered"  )
-            Log.d(TAG, "directionText is ${resolveDirection(filtered)}")
-            Log.d(TAG, "qiblaBearing is $qiblaBearing"  )
+            Log.d(TAG, "Magnetic azimuth = $magneticAzimuth°")
+            Log.d(TAG, "True azimuth (after declination) = $trueAzimuth°")
+            Log.d(TAG, "Qibla bearing = $qiblaBearing°")
 
             _uiState.value = _uiState.value.copy(
                 azimuth = filtered,
                 directionText = resolveDirection(filtered),
-                qiblaBearing = qiblaBearing,
+                qiblaBearing = qiblaBearing
             )
-
         }
     }
 
+
+
     fun stop() {
+        locationDataSource.stop()
         sensorDataSource.stop()
     }
 
-    private fun resolveDirection(angle: Float): String {
-        val normalized = (angle + 360).mod(360f)
-        return when (normalized) {
-            in 22.5f..67.5f -> "Northeast"
-            in 67.5f..112.5f -> "East"
-            in 112.5f..157.5f -> "Southeast"
-            in 157.5f..202.5f -> "South"
-            in 202.5f..247.5f -> "Southwest"
-            in 247.5f..292.5f -> "West"
-            in 292.5f..337.5f -> "Northwest"
-            else -> "North"
-        }
-    }
+
 
     override fun onCleared() {
         stop()

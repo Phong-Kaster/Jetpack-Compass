@@ -7,8 +7,8 @@ class CalculateQiblaBearingUseCase {
         userLng: Double
     ): Float {
         // Mecca position
-        val meccaLat = Math.toRadians(21.4225)
-        val meccaLng = Math.toRadians(39.8262)
+        val meccaLat = Math.toRadians(21.42664)
+        val meccaLng = Math.toRadians(39.82563)
 
         val lat = Math.toRadians(userLat)
         val lng = Math.toRadians(userLng)
