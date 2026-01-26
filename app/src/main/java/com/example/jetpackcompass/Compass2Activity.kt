@@ -183,22 +183,8 @@ private fun Compass2Layout(
     uiState: CompassUiState,
     onBack: () -> Unit = {},
 ) {
-    // Device direction
-    val animatedAzimuth by animateFloatAsState(
-        targetValue = -uiState.azimuth,
-        animationSpec = tween(durationMillis = 300),
-        label = "dialRotation"
-    )
-
-    // Qibla direction
-    val animatedQibla by animateFloatAsState(
-        targetValue = uiState.qiblaBearing - uiState.azimuth,
-        animationSpec = tween(durationMillis = 300),
-        label = "qiblaRotation"
-    )
-
     val isPointingToMecca = currentDirectionPointToMecca(
-        qiblaDirection = animatedQibla
+        qiblaDirection = uiState.qiblaBearing - uiState.azimuth
     )
 
     CoreLayout(
@@ -252,7 +238,7 @@ private fun Compass2Layout(
                 CustomizedCompass(
                     azimuth = uiState.azimuth,
                     qiblaBearing = uiState.qiblaBearing,
-                    compassDesign = CompassDesign.Royalty,
+                    compassDesign = CompassDesign.Default,
                     modifier = Modifier
                 )
             }

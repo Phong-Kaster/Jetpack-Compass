@@ -1,14 +1,17 @@
 package com.example.jetpackcompass.ui.component
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -17,6 +20,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcompass.domain.enums.CompassDesign
+import com.example.jetpackcompass.util.CompassUtil.normalize180
+import com.example.jetpackcompass.util.CompassUtil.normalizeAngle
+import com.example.jetpackcompass.util.CompassUtil.shortestAngleDelta
 
 @Composable
 fun CustomizedCompass(
@@ -25,76 +31,78 @@ fun CustomizedCompass(
     compassDesign: CompassDesign = CompassDesign.Default,
     modifier: Modifier = Modifier,
 ) {
-    // Device direction
-    val animatedAzimuth by animateFloatAsState(
-        targetValue = -azimuth,
-        animationSpec = tween(durationMillis = 300),
-        label = "dialRotation"
+    // Visual angles (bounded)
+    var dialAngle by remember { mutableStateOf(0f) }
+    var qiblaAngle by remember { mutableStateOf(0f) }
+
+    // Target angles
+    val targetDial = normalize180(-azimuth)
+    val targetQibla = normalize180(qiblaBearing - azimuth)
+
+    // Smooth shortest-path animation
+    val animatedDial by animateFloatAsState(
+        targetValue = targetDial,
+        animationSpec = tween(200),
+        label = "dial"
     )
 
-    // Qibla direction
     val animatedQibla by animateFloatAsState(
-        targetValue = qiblaBearing - azimuth,
-        animationSpec = tween(durationMillis = 300),
-        label = "qiblaRotation"
+        targetValue = targetQibla,
+        animationSpec = tween(200),
+        label = "qibla"
     )
-    
 
+    // Update bounded state ONLY
+    LaunchedEffect(targetDial) {
+        dialAngle = targetDial
+    }
+
+    LaunchedEffect(targetQibla) {
+        qiblaAngle = targetQibla
+    }
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(350.dp)
+        modifier = modifier.size(350.dp)
     ) {
-        // 🧭 Dial (rotates)
+
         Image(
             painter = painterResource(compassDesign.dialIcon),
-            contentScale = ContentScale.Fit,
             contentDescription = "Dial",
             modifier = Modifier
                 .matchParentSize()
-                .graphicsLayer {
-                    rotationZ = animatedAzimuth
-                },
+                .graphicsLayer { rotationZ = animatedDial }
         )
 
-        // 🧭 North icon (rotates with dial)
         Image(
             painter = painterResource(compassDesign.northIcon),
-            contentScale = ContentScale.Fit,
-            contentDescription = "northIcon",
+            contentDescription = "North",
             modifier = Modifier
                 .matchParentSize()
-                .graphicsLayer {
-                    rotationZ = animatedAzimuth
-                },
+                .graphicsLayer { rotationZ = animatedDial }
         )
 
-        // Needle (fixed)
         if (compassDesign.needle != 0) {
             Image(
                 painter = painterResource(compassDesign.needle),
-                contentScale = ContentScale.Fit,
                 contentDescription = "Needle",
-                modifier = Modifier
-                    .matchParentSize(),
+                modifier = Modifier.matchParentSize()
             )
         }
 
-
-        // 🕋 Qibla icon (relative rotation)
         Image(
             painter = painterResource(compassDesign.qiblaIcon),
             contentDescription = "Qibla",
             modifier = Modifier
                 .matchParentSize()
-                .graphicsLayer {
-                    rotationZ = animatedQibla
-                }
+                .graphicsLayer { rotationZ = animatedQibla }
         )
     }
-
 }
+
+
+
+
 
 @Preview
 @Composable

@@ -55,13 +55,43 @@ object CompassUtil {
     }
 
     /**
-     * Return true if device points to Qibla/Mecca directly
+     * Return true nếu hướng của thiết bị trùng với hướng của Qibla
      */
     fun currentDirectionPointToMecca(qiblaDirection: Float): Boolean {
         val tolerance = 3f
         val normalized = (qiblaDirection + 360) % 360
 
         return normalized <= tolerance || normalized >= 360f - tolerance
+    }
+
+
+    /**
+     * Góc xoay của la bàn từ 0 đến 360 độ nhưng animateFloatAsState thì không hiểu vấn đề này
+     * Ví dụ:
+     * Previous azimuth: 359°
+     * New azimuth: 1°
+     *
+     * Trong thực tế thì quay 2 độ là về đúng hướng
+     * Trong compose thì quay 359 → -1  = 358° để về đúng hướng
+     *
+     * Phép tính bên dưới sẽ lựa chọn đường đi ngắn nhất
+     */
+    fun shortestAngleDelta(from: Float, to: Float): Float {
+        var delta = (to - from) % 360f
+        if (delta > 180f) delta -= 360f
+        if (delta < -180f) delta += 360f
+        return delta
+    }
+
+    fun normalizeAngle(angle: Float): Float {
+        return (angle % 360f + 360f) % 360f
+    }
+
+    fun normalize180(angle: Float): Float {
+        var a = angle % 360f
+        if (a > 180f) a -= 360f
+        if (a < -180f) a += 360f
+        return a
     }
 
 
