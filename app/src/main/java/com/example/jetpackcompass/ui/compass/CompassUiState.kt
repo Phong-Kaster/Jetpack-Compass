@@ -5,5 +5,7 @@ data class CompassUiState(
     val isGpsEnabled: Boolean = false,
 
     val azimuth: Float = 0f,
-    val directionText: String = "North"
+    val directionText: String = "North",
+
+    val qiblaBearing: Float = 0f
 )

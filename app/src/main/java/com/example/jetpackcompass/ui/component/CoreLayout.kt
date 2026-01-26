@@ -17,50 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
-@Composable
-fun CoreLayout(
-    modifier: Modifier = Modifier,
-    showLoading: Boolean = false,
-    topBar: @Composable () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
-    snackbarHost: @Composable () -> Unit = {},
-    floatingActionButton: @Composable () -> Unit = {},
-    backgroundColor: Color = Color(0xFF2C3141),
-    contentWindowInsets: WindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
-    content: @Composable () -> Unit,
-) {
-    val focusManager = LocalFocusManager.current
-
-    Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = { focusManager.clearFocus() }
-            )
-            .background(backgroundColor),
-        topBar = topBar,
-        bottomBar = bottomBar,
-        snackbarHost = snackbarHost,
-        floatingActionButton = floatingActionButton,
-        containerColor = Color.Unspecified,
-        contentWindowInsets = contentWindowInsets,
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (showLoading) {
-                CircularProgressIndicator()
-            } else {
-                content()
-            }
-        }
-    }
-}
 
 @Composable
 fun CoreLayout(

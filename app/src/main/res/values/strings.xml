@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Jetpack Compass</string>
+    <string name="silver">Silver</string>
+    <string name="modern">Modern</string>
 </resources>

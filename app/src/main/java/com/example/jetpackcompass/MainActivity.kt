@@ -13,17 +13,30 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.jetpackcompass.data.sensor.CompassSensorManager
 import com.example.jetpackcompass.data.sensor.FakeCompassSensorManager
+import com.example.jetpackcompass.domain.usecase.CalculateQiblaBearingUseCase
 import com.example.jetpackcompass.domain.usecase.GetCompassReadingUseCase
 import com.example.jetpackcompass.ui.compass.CompassUiState
 import com.example.jetpackcompass.ui.compass.CompassScreen
@@ -73,7 +86,8 @@ class MainActivity : ComponentActivity() {
 
         compassViewModel = CompassViewModel(
             sensorDataSource = CompassSensorManager(this),
-            getCompassReadingUseCase = GetCompassReadingUseCase()
+            getCompassReadingUseCase = GetCompassReadingUseCase(),
+            calculateQiblaBearingUseCase = CalculateQiblaBearingUseCase()
         )
     }
 
@@ -141,6 +155,11 @@ class MainActivity : ComponentActivity() {
                 JetpackComposeLayout(
                     uiState = uiState,
                     onOpenLocationSettings = { openLocationSettings() },
+                    onOpenNextVersion = {
+                        val intent = Intent(this, Compass2Activity::class.java)
+                        startActivity(intent)
+
+                    }
                 )
             }
         }
@@ -152,9 +171,38 @@ class MainActivity : ComponentActivity() {
 fun JetpackComposeLayout(
     uiState: CompassUiState,
     onOpenLocationSettings: () -> Unit = {},
+    onOpenNextVersion: () -> Unit = {},
 ) {
     CoreLayout(
         modifier = Modifier.background(Color.Black),
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 32.dp
+                    )
+                    .navigationBarsPadding()
+            ) {
+                Text(
+                    text = "Go to next version compass",
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(shape = RoundedCornerShape(12.dp))
+                        .background(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color.Blue
+                        )
+                        .clickable {
+                            onOpenNextVersion()
+                        }
+                        .padding(12.dp)
+                )
+            }
+        },
         content = {
             CompassScreen(
                 enable = uiState.hasLocationPermission && uiState.isGpsEnabled,

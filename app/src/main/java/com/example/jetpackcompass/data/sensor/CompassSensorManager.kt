@@ -46,6 +46,8 @@ class CompassSensorManager(context: Context) : CompassSensorDataSource {
                 val orientation = FloatArray(3)
                 SensorManager.getOrientation(rotationMatrix, orientation)
 
+                // Azimuth = where the phone is pointing relative to North
+                // Góc phương vị = hướng điện thoại đang chỉ so với hướng Bắc.
                 val azimuth =
                     Math.toDegrees(orientation[0].toDouble()).toFloat()
 
