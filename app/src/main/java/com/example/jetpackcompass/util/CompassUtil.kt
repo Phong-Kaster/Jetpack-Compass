@@ -59,8 +59,10 @@ object CompassUtil {
      */
     fun currentDirectionPointToMecca(qiblaDirection: Float): Boolean {
         val tolerance = 3f
+        val normalized = (qiblaDirection + 360) % 360
 
-        return qiblaDirection in 0f..tolerance || qiblaDirection in (360f - tolerance)..360f
+        return normalized <= tolerance || normalized >= 360f - tolerance
     }
+
 
 }

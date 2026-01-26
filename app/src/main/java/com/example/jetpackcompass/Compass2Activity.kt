@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +59,7 @@ import com.example.jetpackcompass.ui.compass.CompassViewModel
 import com.example.jetpackcompass.ui.component.CoreLayout
 import com.example.jetpackcompass.ui.component.CustomizedCompass
 import com.example.jetpackcompass.ui.theme.JetpackCompassTheme
+import com.example.jetpackcompass.util.CompassUtil
 import com.example.jetpackcompass.util.CompassUtil.currentDirectionPointToMecca
 import kotlinx.coroutines.launch
 
@@ -194,6 +197,9 @@ private fun Compass2Layout(
         label = "qiblaRotation"
     )
 
+    val isPointingToMecca = currentDirectionPointToMecca(
+        qiblaDirection = animatedQibla
+    )
 
     CoreLayout(
         modifier = Modifier.background(color = Color.Black),
@@ -220,7 +226,7 @@ private fun Compass2Layout(
 
                 Text(
                     text = "${uiState.azimuth.toInt()}°",
-                    color = if (currentDirectionPointToMecca(qiblaDirection = animatedQibla))
+                    color = if (isPointingToMecca)
                         Color.Green
                     else
                         Color.White,
@@ -229,7 +235,7 @@ private fun Compass2Layout(
                 )
                 Text(
                     text = uiState.directionText,
-                    color = if (currentDirectionPointToMecca(qiblaDirection = animatedQibla))
+                    color = if (isPointingToMecca)
                         Color.Green
                     else
                         Color.White,
