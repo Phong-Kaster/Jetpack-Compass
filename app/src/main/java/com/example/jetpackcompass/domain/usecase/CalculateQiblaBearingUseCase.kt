@@ -1,5 +1,8 @@
 package com.example.jetpackcompass.domain.usecase
 
+/**
+ * UseCase này dùng để tính toán góc phương vị (bearing) tuyệt đối từ vị trí hiện tại của người dùng đến Thánh địa Mecca
+ */
 class CalculateQiblaBearingUseCase {
 
     fun execute(

@@ -48,17 +48,21 @@ class CompassViewModel(
                     latestLocation = location
 
                     Log.d(TAG, "Location update ----------------------------------")
-                    Log.d(TAG, "Location update → " + "lat=${location.latitude}, " + "lng=${location.longitude}, " + "alt=${location.altitude}")
+                    Log.d(
+                        TAG,
+                        "Location update → " + "lat=${location.latitude}, " + "lng=${location.longitude}, " + "alt=${location.altitude}"
+                    )
                 }
         }
 
         sensorDataSource.start { magneticAzimuth ->
-
+            // chuyển đổi từ Magnetic North sang True North
             val trueAzimuth = convertFromMagneticNorthToTrueNorth(
-                magneticAzimuth,
-                latestLocation
+                magneticAzimuth = magneticAzimuth,
+                location = latestLocation
             )
 
+            // áp dụng bộ lọc giảm nhiễu, tránh để kim la bàn nhảy lung tung
             val filtered = applyLowPassFilter(
                 previous = _uiState.value.azimuth,
                 current = trueAzimuth,
@@ -66,8 +70,11 @@ class CompassViewModel(
             )
 
 
-            val location = latestLocation
-            val qiblaBearing = location?.let {
+            // Qibla bearing trả lời cho
+            // cau hỏi là "Nếu tôi đang quay mặt về Bắc cực (True North), thì tôi cần quay bao nhiêu độ để hướng về phía Qibla?"
+            // Output range: 0° … 360°
+            // Ví dụ: Qibla bearing = 120° nghĩa là từ True North, cần quay 120° theo chiều kim đồng hồ để hướng về Qibla
+            val qiblaBearing = latestLocation?.let {
                 calculateQiblaBearingUseCase.execute(
                     userLat = it.latitude,
                     userLng = it.longitude

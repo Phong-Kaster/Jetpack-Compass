@@ -29,7 +29,7 @@ class LocationSensorManager(
 
     private val callback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
-            Log.d(TAG, "lastLocation is ${result.lastLocation}")
+//            Log.d(TAG, "lastLocation is ${result.lastLocation}")
             val loc = result.lastLocation ?: return
             _location.value = LocationInfo(
                 latitude = loc.latitude,

@@ -10,6 +10,17 @@ object CompassUtil {
         return diff <= angleTolerance || diff >= 360 - angleTolerance
     }
 
+    /**
+     * Chuyển đổi từ hướng Bắc từ tính (Magnetic North) sang hướng bắc thật (True North)
+     * Đầu ra là góc azimuth so với hướng bắc thật
+     *
+     * Magnetic North là hướng mà kim la bàn chỉ về, bị ảnh hưởng bởi từ trường địa phương / Where a compass needle points
+     * True North là hướng về Bắc Cực của Trái đất, không bị ảnh hưởng bởi từ trường / Geographic North Pole (maps, bearings, Qibla math)
+     *
+     * @param magneticAzimuth Góc azimuth so với hướng bắc từ tính
+     * @param location Vị trí hiện tại của thiết bị, dùng để tính độ lệch từ tính
+     * @return Góc azimuth so với hướng Bắc cực của Trái đất
+     */
     fun convertFromMagneticNorthToTrueNorth(
         magneticAzimuth: Float,
         location: LocationInfo?
@@ -23,6 +34,8 @@ object CompassUtil {
             System.currentTimeMillis()
         )
 
+        // declination là độ lệch giữa Magnetic North và True North tại vị trí của thiết bị
+        // declination được sử dụng chuyển đổi từ Magnetic North sang True North
         val declination = geomagneticField.declination
         return (magneticAzimuth + declination + 360) % 360
     }
@@ -55,7 +68,7 @@ object CompassUtil {
     }
 
     /**
-     * Return true nếu hướng của thiết bị trùng với hướng của Qibla
+     * Trả về true nếu hướng của thiết bị trùng với hướng của Qibla
      */
     fun currentDirectionPointToQibla(qiblaDirection: Float): Boolean {
         val tolerance = 3f
