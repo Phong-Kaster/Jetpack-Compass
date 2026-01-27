@@ -57,7 +57,7 @@ object CompassUtil {
     /**
      * Return true nếu hướng của thiết bị trùng với hướng của Qibla
      */
-    fun currentDirectionPointToMecca(qiblaDirection: Float): Boolean {
+    fun currentDirectionPointToQibla(qiblaDirection: Float): Boolean {
         val tolerance = 3f
         val normalized = (qiblaDirection + 360) % 360
 
@@ -87,12 +87,14 @@ object CompassUtil {
         return (angle % 360f + 360f) % 360f
     }
 
-    fun normalize180(angle: Float): Float {
+    /**
+     * Hàm này sẽ chuyển bất kì góc nào về giá trị nằm trong khoảng -180° đến +180°, rồi chọn hướng xoay ngắn nhất để trả về
+     */
+    fun normalize180(angle: Float?): Float {
+        if (angle == null) return 0f
         var a = angle % 360f
         if (a > 180f) a -= 360f
         if (a < -180f) a += 360f
         return a
     }
-
-
 }

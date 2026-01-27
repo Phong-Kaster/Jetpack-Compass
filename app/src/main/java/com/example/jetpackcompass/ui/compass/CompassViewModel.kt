@@ -14,6 +14,8 @@ import com.example.jetpackcompass.util.CompassUtil.resolveDirection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 class CompassViewModel(
@@ -36,15 +38,18 @@ class CompassViewModel(
         locationDataSource.start()
 
         viewModelScope.launch {
-            locationDataSource.location.collectLatest { location ->
-                latestLocation = location
+            locationDataSource
+                .location
+                .filterNotNull()
+                .distinctUntilChanged { old, new ->
+                    old.latitude == new.latitude && old.longitude == new.longitude
+                }
+                .collectLatest { location ->
+                    latestLocation = location
 
-                Log.d(TAG, "Location update ----------------------------------")
-                Log.d(
-                    TAG,
-                    "Location update → " + "lat=${location?.latitude}, " + "lng=${location?.longitude}, " + "alt=${location?.altitude}"
-                )
-            }
+                    Log.d(TAG, "Location update ----------------------------------")
+                    Log.d(TAG, "Location update → " + "lat=${location.latitude}, " + "lng=${location.longitude}, " + "alt=${location.altitude}")
+                }
         }
 
         sensorDataSource.start { magneticAzimuth ->
@@ -61,14 +66,13 @@ class CompassViewModel(
             )
 
 
-
             val location = latestLocation
-            val qiblaBearing = if (location != null) {
+            val qiblaBearing = location?.let {
                 calculateQiblaBearingUseCase.execute(
-                    userLat = location.latitude,
-                    userLng = location.longitude
+                    userLat = it.latitude,
+                    userLng = it.longitude
                 )
-            } else 0f
+            }
 
             Log.d(TAG, "azimuth ----------------------------------")
             Log.d(TAG, "azimuth - Filtered azimuth = $filtered°")

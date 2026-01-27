@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,7 @@ import com.example.jetpackcompass.ui.compass.CompassViewModel
 import com.example.jetpackcompass.ui.component.CoreLayout
 import com.example.jetpackcompass.ui.component.CustomizedCompass
 import com.example.jetpackcompass.ui.theme.JetpackCompassTheme
-import com.example.jetpackcompass.util.CompassUtil.currentDirectionPointToMecca
+import com.example.jetpackcompass.util.CompassUtil.currentDirectionPointToQibla
 import kotlinx.coroutines.launch
 
 class Compass2Activity : ComponentActivity() {
@@ -166,10 +167,15 @@ private fun Compass2Layout(
     onBack: () -> Unit = {},
 ) {
     val isPointingToMecca by remember(uiState.relativeQiblaAngle) {
-        mutableStateOf(
-            currentDirectionPointToMecca(qiblaDirection = uiState.relativeQiblaAngle)
-        )
+        derivedStateOf {
+            uiState.relativeQiblaAngle
+                ?.let { currentDirectionPointToQibla(it) }
+                ?: false
+        }
     }
+
+
+
 
     CoreLayout(
         modifier = Modifier.background(color = Color.Black),

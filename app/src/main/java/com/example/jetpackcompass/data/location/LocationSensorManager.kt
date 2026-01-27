@@ -8,6 +8,15 @@ import com.google.android.gms.location.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * App start
+ *  ├─ get lastLocation (instant)
+ *  │    └─ compute Qibla immediately
+ *  ├─ getCurrentLocation (fast)
+ *  │    └─ refine Qibla
+ *  └─ requestLocationUpdates (accurate)
+ *       └─ keep Qibla updated
+ */
 class LocationSensorManager(
     context: Context
 ) : LocationDataSource {
@@ -36,6 +45,21 @@ class LocationSensorManager(
 
     @SuppressLint("MissingPermission")
     override fun start() {
+        // Get cached location FIRST (instant)
+        client
+            .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { loc ->
+                if (loc != null) {
+                    _location.value = LocationInfo(
+                        latitude = loc.latitude,
+                        longitude = loc.longitude,
+                        altitude = loc.altitude
+                    )
+                    Log.d(TAG, "Using cached lastLocation: $loc")
+                }
+            }
+
+        // Then start active updates to get real location from GPS system
         client.requestLocationUpdates(
             request,
             callback,

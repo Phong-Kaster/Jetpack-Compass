@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,19 +24,13 @@ import com.example.jetpackcompass.util.CompassUtil.normalize180
 @Composable
 fun CustomizedCompass(
     azimuth: Float,
-    relativeQiblaAngle: Float, // Relative Qibla angle nghia la thiet bi can xoay bao nhieu do de huong ve Qibla
+    relativeQiblaAngle: Float?,
     compassDesign: CompassDesign = CompassDesign.Default,
     modifier: Modifier = Modifier,
 ) {
-    // Visual angles (bounded)
-    var dialAngle by remember { mutableStateOf(0f) }
-    var qiblaAngle by remember { mutableStateOf(0f) }
+    val targetDial = normalize180(angle = -azimuth)
+    val targetQibla = normalize180(angle = relativeQiblaAngle)
 
-    // Target angles
-    val targetDial = normalize180(-azimuth)
-    val targetQibla = normalize180(relativeQiblaAngle)
-
-    // Smooth shortest-path animation
     val animatedDial by animateFloatAsState(
         targetValue = targetDial,
         animationSpec = tween(200),
@@ -47,15 +42,6 @@ fun CustomizedCompass(
         animationSpec = tween(200),
         label = "qibla"
     )
-
-    // Update bounded state ONLY
-    LaunchedEffect(targetDial) {
-        dialAngle = targetDial
-    }
-
-    LaunchedEffect(targetQibla) {
-        qiblaAngle = targetQibla
-    }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -91,12 +77,11 @@ fun CustomizedCompass(
             contentDescription = "Qibla",
             modifier = Modifier
                 .matchParentSize()
+                .alpha(if (relativeQiblaAngle == null) 0f else 1f)
                 .graphicsLayer { rotationZ = animatedQibla }
         )
     }
 }
-
-
 
 
 
