@@ -1,6 +1,5 @@
 package com.example.jetpackcompass.ui.component
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -15,19 +14,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcompass.domain.enums.CompassDesign
 import com.example.jetpackcompass.util.CompassUtil.normalize180
-import com.example.jetpackcompass.util.CompassUtil.normalizeAngle
-import com.example.jetpackcompass.util.CompassUtil.shortestAngleDelta
 
 @Composable
 fun CustomizedCompass(
     azimuth: Float,
-    qiblaBearing: Float,
+    relativeQiblaAngle: Float, // Relative Qibla angle nghia la thiet bi can xoay bao nhieu do de huong ve Qibla
     compassDesign: CompassDesign = CompassDesign.Default,
     modifier: Modifier = Modifier,
 ) {
@@ -37,7 +33,7 @@ fun CustomizedCompass(
 
     // Target angles
     val targetDial = normalize180(-azimuth)
-    val targetQibla = normalize180(qiblaBearing - azimuth)
+    val targetQibla = normalize180(relativeQiblaAngle)
 
     // Smooth shortest-path animation
     val animatedDial by animateFloatAsState(
@@ -109,7 +105,7 @@ fun CustomizedCompass(
 private fun PreviewCustomizedCompass() {
     CustomizedCompass(
         azimuth = 0f,
-        qiblaBearing = 298f,
+        relativeQiblaAngle = 45f,
         modifier = Modifier,
     )
 }

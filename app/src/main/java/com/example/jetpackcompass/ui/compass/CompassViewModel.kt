@@ -22,7 +22,7 @@ class CompassViewModel(
     private val calculateQiblaBearingUseCase: CalculateQiblaBearingUseCase,
 ) : ViewModel() {
 
-    private val  TAG = this.javaClass.simpleName
+    private val TAG = this.javaClass.simpleName
     private val _uiState = MutableStateFlow(CompassUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -39,12 +39,10 @@ class CompassViewModel(
             locationDataSource.location.collectLatest { location ->
                 latestLocation = location
 
+                Log.d(TAG, "Location update ----------------------------------")
                 Log.d(
                     TAG,
-                    "📍 Location update → " +
-                            "lat=${location?.latitude}, " +
-                            "lng=${location?.longitude}, " +
-                            "alt=${location?.altitude}"
+                    "Location update → " + "lat=${location?.latitude}, " + "lng=${location?.longitude}, " + "alt=${location?.altitude}"
                 )
             }
         }
@@ -61,7 +59,8 @@ class CompassViewModel(
                 current = trueAzimuth,
                 alpha = Constant.LOW_PASS_ALPHA
             )
-            Log.d(TAG, "Filtered azimuth = $filtered°")
+
+
 
             val location = latestLocation
             val qiblaBearing = if (location != null) {
@@ -71,10 +70,11 @@ class CompassViewModel(
                 )
             } else 0f
 
-
-            Log.d(TAG, "Magnetic azimuth = $magneticAzimuth°")
-            Log.d(TAG, "True azimuth (after declination) = $trueAzimuth°")
-            Log.d(TAG, "Qibla bearing = $qiblaBearing°")
+            Log.d(TAG, "azimuth ----------------------------------")
+            Log.d(TAG, "azimuth - Filtered azimuth = $filtered°")
+            Log.d(TAG, "azimuth - Magnetic azimuth = $magneticAzimuth°")
+            Log.d(TAG, "azimuth - True azimuth (after declination) = $trueAzimuth°")
+            Log.d(TAG, "azimuth - Qibla bearing = $qiblaBearing°")
 
             _uiState.value = _uiState.value.copy(
                 azimuth = filtered,
@@ -85,12 +85,10 @@ class CompassViewModel(
     }
 
 
-
     fun stop() {
         locationDataSource.stop()
         sensorDataSource.stop()
     }
-
 
 
     override fun onCleared() {
