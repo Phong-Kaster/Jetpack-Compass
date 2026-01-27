@@ -46,6 +46,7 @@ import com.example.jetpackcompass.domain.enums.CompassDesign
 import com.example.jetpackcompass.domain.usecase.CalculateQiblaBearingUseCase
 import com.example.jetpackcompass.ui.compass.CompassUiState
 import com.example.jetpackcompass.ui.compass.CompassViewModel
+import com.example.jetpackcompass.ui.compass.CompassViewModel2
 import com.example.jetpackcompass.ui.component.CoreLayout
 import com.example.jetpackcompass.ui.component.CustomizedCompass
 import com.example.jetpackcompass.ui.theme.JetpackCompassTheme
@@ -55,7 +56,7 @@ import kotlinx.coroutines.launch
 class Compass2Activity : ComponentActivity() {
     private val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
     private var uiState by mutableStateOf(CompassUiState())
-    private lateinit var compassViewModel: CompassViewModel
+    private lateinit var compassViewModel2: CompassViewModel2
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -97,26 +98,16 @@ class Compass2Activity : ComponentActivity() {
         )
     }
 
-    private fun collectUiState() {
-        lifecycleScope.launch {
-            compassViewModel.uiState.collect { state ->
-                uiState = uiState.copy(
-                    azimuth = state.azimuth,
-                    directionText = state.directionText
-                )
-            }
-        }
 
-    }
 
     private fun startCompass() {
         if (uiState.hasLocationPermission && uiState.isGpsEnabled) {
-            compassViewModel.start()
+            compassViewModel2.start()
         }
     }
 
     private fun stopCompass() {
-        compassViewModel.stop()
+        compassViewModel2.stop()
     }
 
     private fun checkPermissionAndGps() {
@@ -135,10 +126,12 @@ class Compass2Activity : ComponentActivity() {
 
 
     private fun createViewModel() {
-        compassViewModel = CompassViewModel(
-            sensorDataSource = CompassSensorManager(this),
-            locationDataSource = LocationSensorManager(this),
-            calculateQiblaBearingUseCase = CalculateQiblaBearingUseCase()
+        compassViewModel2 = CompassViewModel2(
+            compassRepository = com.example.jetpackcompass.data.repository.CompassRepository(
+                sensorDataSource = CompassSensorManager(this),
+                locationDataSource = LocationSensorManager(this),
+                calculateQiblaBearingUseCase = CalculateQiblaBearingUseCase()
+            ),
         )
     }
 
@@ -147,13 +140,11 @@ class Compass2Activity : ComponentActivity() {
 
         createViewModel()
 
-        collectUiState()
-
         enableEdgeToEdge()
         setContent {
             JetpackCompassTheme {
                 Compass2Layout(
-                    uiState = compassViewModel.uiState.collectAsState().value,
+                    uiState = compassViewModel2.uiState.collectAsState().value,
                     onBack = { finish() }
                 )
             }
